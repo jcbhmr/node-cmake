@@ -22,6 +22,14 @@ if(BUILD_SHARED_LIBS)
   list(APPEND configure_args "--shared")
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  list(APPEND vcbuild_args "debug")
+  list(APPEND configure_args "--debug")
+elif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  list(APPEND vcbuild_args "release")
+  list(APPEND configure_args "--release")
+endif()
+
 if(WIN32)
   ExternalProject_Add(node
     GIT_REPOSITORY https://github.com/nodejs/node.git
@@ -30,11 +38,15 @@ if(WIN32)
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE TRUE
     BUILD_COMMAND "./vcbuild" ${vcbuild_args}
-    TEST_COMMAND ""
+    TEST_COMMAND "./vcbuild" test ${vcbuild_test_args}
     INSTALL_COMMAND ""
   )
 else()
   find_program(MAKE_EXE NAMES gmake make nmake mingw32-make REQUIRED)
+  find_program(NINJA_EXE NAMES ninja)
+  if(NINJA_EXE)
+    list(APPEND configure_args "--ninja")
+  endif()
   ExternalProject_Add(node
     GIT_REPOSITORY https://github.com/nodejs/node.git
     GIT_TAG "v${PROJECT_VERSION}"
